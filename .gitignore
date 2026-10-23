@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local settings (paths on this PC). The app recreates it with defaults on first start.
+config.json
+
+# Workspace: extracted game images, upscales, catalog. Game-derived content, never commit it.
+upscale_ws/
+
+# Game files and mod output, in case any end up in the project folder
+*.dat
+*.dbs
+*.tex
+*.pxl
+*.exe
+dino2.cfg
+dc2_upscaler_installed.json
+
+# Process Monitor logs from the in-game key check
+*.csv
+*.pml
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

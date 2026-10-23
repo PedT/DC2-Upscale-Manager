@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DC2 Upscale Manager</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/review.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">DC2 <span>Upscale Manager</span></div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="library" class="active">Library</button>
+    <button data-tab="review">Review <span class="pill" id="reviewCount">0</span></button>
+    <button data-tab="runs">Runs</button>
+    <button data-tab="install">Install</button>
+    <button data-tab="setup">Setup</button>
+  </nav>
+  <div class="summary" id="summary"></div>
+</header>
+
+<main>
+  <!-- LIBRARY -->
+  <section id="tab-library" class="tab active">
+    <div class="filters">
+      <div class="seg" id="fKind">
+        <button data-v="" class="on">All</button><button data-v="fullscreen">Menus</button><button data-v="room">Rooms</button>
+      </div>
+      <select id="fStage"><option value="">All stages</option></select>
+      <select id="fStatus">
+        <option value="">Any status</option><option value="todo">To do</option><option value="queued">Queued</option>
+        <option value="upscaling">Upscaling</option><option value="review">In review</option><option value="approved">Approved</option>
+      </select>
+      <select id="fTried"><option value="">Models tried: any</option><option value="__none">Not tried yet</option></select>
+      <input id="fSearch" type="search" placeholder="Search (e.g. ST100, title, cam 05)">
+      <label class="chk"><input type="checkbox" id="fDups"> duplicates</label>
+      <label class="chk"><input type="checkbox" id="fPlace"> placeholders</label>
+      <span class="muted" id="shownCount"></span>
+    </div>
+
+    <div class="selbar">
+      <span><b id="selCount">0</b> selected</span>
+      <button class="ghost" id="selAll">Select all shown</button>
+      <button class="ghost" id="selTodo">Select "to do" shown</button>
+      <button class="ghost" id="selClear">Clear</button>
+      <button class="ghost danger hidden" id="reopenBtn" title="Send the selected approved images back to &quot;to do&quot; so you can upscale them again">Reopen selected</button>
+      <div class="spacer"></div>
+      <label>Model <select id="rModel"></select></label>
+      <label>Scale <select id="rScale"><option>4</option><option>3</option><option>2</option></select></label>
+      <label title="Upscayl processes; 1 is usually fastest on a single GPU">Workers <select id="rWorkers"><option>1</option><option>2</option></select></label>
+      <label title="Leave empty for automatic">GPU <input id="rGpu" size="3" placeholder="auto"></label>
+      <button class="primary" id="runBtn" disabled>Upscale</button>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <div id="emptyHint" class="empty hidden">
+      No images yet. Go to <a href="#" data-goto="setup">Setup</a>, check the folders, and click <b>Extract</b>.
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="tab-review" class="tab">
+    <div class="rv-toolbar">
+      <div class="seg" id="rvMode"><button data-v="single" class="on">One by one</button><button data-v="grid">Grid</button></div>
+      <span id="rvPos" class="muted"></span>
+      <div class="spacer"></div>
+      <span class="single-only">
+        <button class="ghost" id="rvFit" title="Fit (F)">Fit</button>
+        <button class="ghost" id="rv11" title="Actual pixels (1)">1:1</button>
+        <button class="ghost" id="rvZoomOut" title="Zoom out">&minus;</button>
+        <button class="ghost" id="rvZoomIn" title="Zoom in">+</button>
+      </span>
+      <label class="chk" title="Show the original's real 320x240 pixels (P)"><input type="checkbox" id="rvPixel" checked> pixelated original</label>
+      <label class="chk"><input type="checkbox" id="rvDelete" checked> delete rejected files</label>
+      <label class="chk" title="Desktop notification when a run finishes"><input type="checkbox" id="optNotify" checked> notify</label>
+      <label class="chk" title="Play a chime when a run finishes"><input type="checkbox" id="optChime" checked> chime</label>
+    </div>
+
+    <div id="rvSingle" class="rv-single">
+      <div id="rvViewer"></div>
+      <aside class="rv-side">
+        <h3 id="rvLabel"></h3>
+        <dl id="rvInfo"></dl>
+        <div class="rv-actions">
+          <button class="primary ok" id="rvApprove">Approve <kbd>A</kbd></button>
+          <button class="ghost danger" id="rvReject">Reject <kbd>R</kbd></button>
+        </div>
+        <div class="rv-actions">
+          <button class="ghost" id="rvPrev">&larr; Prev</button>
+          <button class="ghost" id="rvNext">Next &rarr;</button>
+        </div>
+        <p class="muted small">Drag the line to compare &middot; wheel to zoom &middot; drag to pan when zoomed &middot;
+          double-click to fit &middot; <kbd>Space</kbd> flips between full original and full upscaled &middot;
+          <kbd>&larr;</kbd><kbd>&rarr;</kbd> previous/next &middot; <kbd>P</kbd> pixelated original</p>
+      </aside>
+    </div>
+    <div id="rvStrip" class="strip"></div>
+
+    <div id="rvGrid" class="hidden">
+      <div class="selbar">
+        <span><b id="rvSelCount">0</b> selected</span>
+        <button class="ghost" id="rvSelAll">Select all</button>
+        <button class="ghost" id="rvSelClear">Clear</button>
+        <span class="muted small">Hover a card to compare (left of the line = original). Double-click opens it full size.</span>
+        <div class="spacer"></div>
+        <button class="primary ok" id="rvBulkApprove" disabled>Approve selected</button>
+        <button class="ghost danger" id="rvBulkReject" disabled>Reject selected</button>
+      </div>
+      <div id="rvCards" class="grid rv-cards"></div>
+    </div>
+    <div id="rvEmpty" class="empty hidden">Nothing waiting for review. Upscale some images from the <a href="#" data-goto="library">Library</a>.</div>
+  </section>
+
+  <!-- RUNS -->
+  <section id="tab-runs" class="tab">
+    <table class="runs">
+      <thead><tr><th>#</th><th>State</th><th>Model</th><th>Scale</th><th>Done</th><th>Failed</th><th>Started</th><th>Took</th><th></th></tr></thead>
+      <tbody id="runsBody"></tbody>
+    </table>
+  </section>
+
+  <!-- INSTALL -->
+  <section id="tab-install" class="tab">
+    <div class="card wide">
+      <h2>Install target</h2>
+      <p><b id="inMod"></b> <span class="muted">(change it in Setup)</span></p>
+      <p id="inGameNote" class="muted small hidden">This is the game folder itself. Install only adds new
+        <code>XXXXXXXX.dat</code> files to <code>Data\</code> and lists them in <code>dc2_upscaler_installed.json</code>
+        next to <code>Dino2.exe</code>. The game's own files are never changed, and Uninstall removes exactly the
+        listed files and then the list. If a GOG update ever removes them, just click Install again.</p>
+      <label class="chk" title="The game uses different replacement files in 16-bit colour mode; installing them doubles the background files">
+        <input type="checkbox" id="in16bit"> also install files for 16-bit colour mode</label>
+      <p id="inDepth" class="small"></p>
+      <p id="inError" class="msg bad"></p>
+      <ul id="inWarnings" class="warn"></ul>
+      <div class="stats">
+        <div><b id="inReady">0</b><span>approved &amp; ready</span></div>
+        <div><b id="inInstalled">0</b><span>images installed</span></div>
+        <div><b id="inFiles">0</b><span>files in Data\</span></div>
+        <div><b id="inBlocked">0</b><span>approved, not installable yet</span></div>
+      </div>
+      <div class="row">
+        <button class="primary" id="inInstall">Install / update game</button>
+        <button class="ghost danger" id="inUninstall">Uninstall everything</button>
+      </div>
+      <p class="muted small">Install makes the install target match your approved images:
+        <ul class="muted small">
+          <li>It adds new <code>.dat</code> files and updates changed ones.</li>
+          <li>It removes files for images you reopened.</li>
+          <li>It never overwrites a file it didn't create; such files are left untouched and reported.</li>
+          <li>GOG's own fix files are never touched.</li>
+          <li>Rooms also get an <b>HD mask</b>: the pieces drawn over characters walking behind objects, re-cut
+            from your approved HD image so they match it exactly.</li>
+        </ul>
+        Then start the game to see the result.</p>
+    </div>
+    <div class="card wide">
+      <h2>Installed files</h2>
+      <table class="runs"><thead><tr><th>Image</th><th>Type</th><th>File</th><th>Texture</th><th>Size</th><th>Installed</th></tr></thead>
+        <tbody id="inFilesBody"></tbody></table>
+    </div>
+    <div class="card wide">
+      <h2>Confirm replacement keys in game</h2>
+      <p class="muted small">Room keys are predicted. Play the mod copy for a few minutes with Process Monitor
+        recording, then import its log here. Step-by-step guide:
+        <code>C:\Claude\DinoCrisis2ModWork\KEY_CHECK_PROCEDURE.md</code></p>
+      <div id="kcCounts" class="kc-counts"></div>
+      <p id="kcState" class="muted small"></p>
+      <div class="row">
+        <input type="file" id="kcFile" accept=".csv,text/csv" class="hidden">
+        <button class="ghost" id="kcImport">Import Process Monitor log (CSV)&hellip;</button>
+        <button class="primary hidden" id="kcApply"></button>
+      </div>
+      <div id="kcReport" class="hidden"></div>
+    </div>
+    <div class="card wide" id="inBlockedCard">
+      <h2>Approved but not installable yet</h2>
+      <p class="muted small">These approved images can't be installed yet; the reason is shown for each one.</p>
+      <ul id="inBlockedList" class="muted small"></ul>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section id="tab-setup" class="tab">
+    <div class="card">
+      <h2>Folders</h2>
+      <div class="field"><label>Dino Crisis 2 install (read-only)</label>
+        <input id="cGame"><button class="ghost" data-browse="cGame" data-kind="folder">Browse…</button></div>
+      <div class="field"><label>Workspace (extracted + upscaled images)</label>
+        <input id="cWs"><button class="ghost" data-browse="cWs" data-kind="folder">Browse…</button></div>
+      <div class="field"><label>Install target (the game folder itself, or a copy of it)</label>
+        <input id="cMod"><button class="ghost" data-browse="cMod" data-kind="folder">Browse…</button></div>
+      <div class="field"><label>upscayl-bin.exe</label>
+        <input id="cBin"><button class="ghost" data-browse="cBin" data-kind="file">Browse…</button></div>
+      <div class="row"><button class="primary" id="saveCfg">Save settings</button><span id="cfgMsg" class="msg"></span></div>
+    </div>
+    <div class="card">
+      <h2>Upscayl</h2>
+      <div class="row"><button class="ghost" id="checkBtn">Run self-check</button><span id="checkMsg" class="msg"></span></div>
+      <p class="muted" id="modelsList"></p>
+    </div>
+    <div class="card">
+      <h2>Extract images</h2>
+      <p class="muted">Reads every background from the game folder into the workspace. Safe to repeat: unchanged
+        images are skipped and every image keeps its status.</p>
+      <div class="row"><button class="primary" id="extractBtn">Extract / refresh</button></div>
+      <p id="extractInfo" class="muted"></p>
+      <ul id="exeWarnings" class="warn"></ul>
+    </div>
+    <div class="card">
+      <h2>Workspace disk usage</h2>
+      <p class="muted small" id="dkPath"></p>
+      <table class="runs"><thead><tr><th>Area</th><th>Files</th><th>Size</th></tr></thead><tbody id="dkAreas"></tbody></table>
+      <h2 style="margin-top:16px">Clean up</h2>
+      <p class="muted small">Only removes files that are no longer needed or are rebuilt automatically. Originals,
+        images waiting for review, approved images and install backups are never touched.</p>
+      <div id="dkCats"></div>
+      <div class="row"><button class="primary" id="dkClean" disabled>Clean up selected</button>
+        <button class="ghost" id="dkRefresh">Refresh</button><span id="dkMsg" class="msg"></span></div>
+    </div>
+  </section>
+</main>
+
+<footer id="jobbar" class="jobbar hidden">
+  <div class="jobtext"><b id="jobTitle"></b> <span id="jobDetail" class="muted"></span></div>
+  <div class="bar"><div id="jobFill"></div></div>
+  <span id="jobQueue" class="muted"></span>
+  <button class="ghost danger" id="jobCancel">Cancel</button>
+</footer>
+<div id="toasts"></div>
+
+<div id="banner" class="banner hidden">
+  <span id="bannerText"></span>
+  <button class="primary" id="bannerReview">Review now</button>
+  <button class="ghost" id="bannerClose" title="Dismiss">&times;</button>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <header><b id="mdTitle"></b><span id="mdSub" class="muted"></span><div class="spacer"></div>
+      <button class="ghost" id="mdClose">Close <kbd>Esc</kbd></button></header>
+    <div id="mdViewer"></div>
+    <footer>
+      <span id="mdMsg" class="msg"></span><div class="spacer"></div>
+      <input type="file" id="mdFile" accept="image/png,image/jpeg,image/webp" class="hidden">
+      <button class="ghost" id="mdReplace">Replace with edited file&hellip;</button>
+      <button class="ghost danger" id="mdReopen">Reopen (back to "to do")</button>
+      <button class="primary ok" id="mdApprove">Approve</button>
+      <button class="ghost danger" id="mdReject">Reject</button>
+    </footer>
+  </div>
+</div>
+
+<script src="/static/compare.js"></script>
+<script src="/static/app.js"></script>
+<script src="/static/review.js"></script>
+<script src="/static/install.js"></script>
+<script src="/static/maint.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+/* Review tab, comparison viewer, banner and detail popup (M4). */
+.small { font-size: 12px; }
+kbd { font: 11px Consolas, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--muted); }
+button.ok { background: #1f8f66; border-color: #1f8f66; }
+button.ok:hover:not(:disabled) { background: var(--ok); border-color: var(--ok); }
+
+.rv-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
+.rv-single { display: grid; grid-template-columns: 1fr 300px; gap: 12px; height: calc(100vh - 250px); min-height: 380px; }
+#rvViewer { height: 100%; }
+.rv-side { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; overflow: auto; }
+.rv-side h3 { margin: 0 0 10px; font-size: 16px; }
+.rv-side dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0 0 14px; font-size: 13px; }
+.rv-side dt { color: var(--muted); }
+.rv-side dd { margin: 0; word-break: break-word; }
+.rv-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+.rv-actions button { flex: 1; }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding: 10px 2px 4px; }
+.strip img { height: 60px; aspect-ratio: 4/3; border-radius: 4px; border: 2px solid transparent; cursor: pointer; opacity: .6; flex: none; }
+.strip img.cur { border-color: var(--accent2); opacity: 1; }
+
+.rv-cards .hov { position: relative; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: #000; }
+.rv-cards .hov img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; aspect-ratio: auto; }
+.rv-cards .hov .o { image-rendering: pixelated; }
+.rv-cards .hov .line { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; display: none; pointer-events: none; }
+.rv-cards .hov:hover .line { display: block; }
+
+.cmp { position: relative; overflow: hidden; background: #05080e; border: 1px solid var(--line); border-radius: 12px;
+  cursor: ew-resize; touch-action: none; user-select: none; height: 100%; }
+.cmp.panning { cursor: grabbing; }
+.cmp-layer { position: absolute; inset: 0; }
+.cmp-layer img { position: absolute; max-width: none; }
+.cmp-divider { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 6px rgba(0,0,0,.7); }
+.cmp-knob { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid #fff; background: rgba(17,24,39,.75); color: #fff; display: grid; place-items: center; font-size: 10px; letter-spacing: 2px; padding-left: 2px; }
+.cmp-label { position: absolute; top: 10px; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.6); font-size: 12px; pointer-events: none; }
+.cmp-label-l { left: 10px; }
+.cmp-label-r { right: 10px; }
+.cmp-zoom { position: absolute; bottom: 10px; right: 10px; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.6);
+  font-size: 12px; color: var(--muted); pointer-events: none; }
+
+.banner { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 12px;
+  background: var(--panel2); border: 1px solid var(--accent2); border-radius: 12px; padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.7); display: grid; place-items: center; }
+.modal-box { width: min(1400px, 94vw); height: min(900px, 92vh); background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+.modal-box header, .modal-box footer { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+#mdViewer { margin: 0 14px; min-height: 0; }
+
+/* Install tab (M5) */
+.card.wide { max-width: 1100px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+.stats div { background: var(--panel2); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; }
+.stats b { font-size: 22px; }
+.stats span { color: var(--muted); font-size: 12px; }
+code { font: 12px Consolas, monospace; color: var(--accent2); }
+
+/* Disk usage / clean-up (M6) */
+label.dk { display: flex; align-items: baseline; gap: 6px; margin: 6px 0; color: var(--text); }
+
+/* Key check */
+.kc-counts { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.kc-counts b { display: inline-block; width: 70px; }
+.kc-counts .badge { margin-right: 4px; }
